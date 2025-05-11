@@ -51,8 +51,24 @@ fi
 
 for commit_hash in $COMMIT_LIST; do
   echo "Checking commit: $commit_hash"
+  
+  # Get the commit message
+  commit_msg=$(git log --format=%B -n 1 $commit_hash)
+  
+  # Skip GitHub's automatic merge commits for PRs
+  if [[ "$commit_msg" =~ ^Merge\ [0-9a-f]+\ into\ [0-9a-f]+ ]]; then
+    echo "⏩ Skipping GitHub automatic merge commit: $commit_hash"
+    continue
+  fi
+  
+  # Also skip regular merge commits if needed
+  if [[ "$commit_msg" =~ ^Merge\ (pull\ request|branch) ]]; then
+    echo "⏩ Skipping merge commit: $commit_hash"
+    continue
+  fi
+  
   # Get the first line of the commit message (subject line)
-  subject_line=$(git log --format=%s -n 1 $commit_hash)
+  subject_line=$(echo "$commit_msg" | head -n 1)
   
   # Display the subject for debugging
   echo "Subject: $subject_line"
