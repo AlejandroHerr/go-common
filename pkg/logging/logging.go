@@ -17,6 +17,7 @@ type (
 		Commit      string
 		BuildTime   string
 		GoVersion   string
+		CtxKeys     map[any]string // Maps context keys to attribute names
 	}
 	ConfigFunc func(*config)
 )
@@ -30,6 +31,7 @@ func NewLogger(cfgs ...ConfigFunc) *slog.Logger {
 		Commit:      "n/a",
 		BuildTime:   "n/a",
 		GoVersion:   "n/a",
+		CtxKeys:     make(map[any]string),
 	}
 
 	for _, c := range cfgs {
@@ -52,6 +54,10 @@ func NewLogger(cfgs ...ConfigFunc) *slog.Logger {
 	default:
 		// Use JSON for production/staging
 		handler = slog.NewJSONHandler(os.Stdout, opts)
+	}
+
+	if len(cfg.CtxKeys) > 0 {
+		handler = NewContextHandler(handler, cfg.CtxKeys)
 	}
 
 	// Create base logger with common attributes
@@ -107,6 +113,12 @@ func WithBuildTime(buildTime string) ConfigFunc {
 func WithGoVersion(goVersion string) ConfigFunc {
 	return func(cfg *config) {
 		cfg.GoVersion = goVersion
+	}
+}
+
+func WithCtxKeys(keys map[any]string) ConfigFunc {
+	return func(cfg *config) {
+		cfg.CtxKeys = keys
 	}
 }
 
