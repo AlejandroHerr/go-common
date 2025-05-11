@@ -66,4 +66,3 @@ func (h *ContextHandler) WithGroup(name string) slog.Handler {
 		keys:    h.keys,
 	}
 }
-
