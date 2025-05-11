@@ -21,7 +21,7 @@ type (
 	ConfigFunc func(*config)
 )
 
-func New(cfgs ...ConfigFunc) *slog.Logger {
+func NewLogger(cfgs ...ConfigFunc) *slog.Logger {
 	cfg := &config{
 		Environment: "development",
 		Level:       slog.LevelDebug,
