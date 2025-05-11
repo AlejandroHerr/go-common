@@ -1,0 +1,59 @@
+name: Main
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  setup:
+    name: Setup
+    runs-on: ubuntu-latest
+    outputs:
+      go-version: ${{ steps.versions.outputs.go-version }}
+      golangci-version: ${{ steps.versions.outputs.golangci-version }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Set version
+        id: versions
+        run: |
+          go_version=$(grep -m 1 '^go ' go.mod | awk '{print $2}')
+          echo "go-version=$go_version" >> $GITHUB_OUTPUT
+          echo "Go version set to $go_version"
+
+          golangci_version=$(grep -m 1 '^## ' .golangci.yaml| awk '{print $NF}')
+          echo "golangci-version=$golangci_version" >> $GITHUB_OUTPUT
+          echo "Golangci-lint version set to $golangci_version"
+  validate-commits:
+    needs: setup
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Make validation script executable
+        run: chmod +x .github/scripts/validate-commits.sh
+
+      - name: Validate commit messages
+        run: .github/scripts/validate-commits.sh
+  ci:
+    name: Countinuous Integration
+    needs: setup
+    uses: ./.github/workflows/_ci.yaml
+    with:
+      go-version: ${{ needs.setup.outputs.go-version }}
+      golangci-version: ${{ needs.setup.outputs.golangci-version }}
+  semantic_release:
+    name: Bump Version
+    needs: [setup, ci, validate-commits]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Release
+        uses: go-semantic-release/action@v1
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          changelog-file: CHANGELOG.md
