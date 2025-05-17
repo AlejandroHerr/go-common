@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/go-chi/chi/v5"
-	chimiddleware "github.com/go-chi/chi/v5/middleware"
+	"github.com/go-chi/chi/v5/middleware"
 	"github.com/google/uuid"
 )
 
@@ -16,7 +16,7 @@ type RequestIDContextKey struct{}
 func RequestIDMiddleware() func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			ww := chimiddleware.NewWrapResponseWriter(w, r.ProtoMajor)
+			ww := middleware.NewWrapResponseWriter(w, r.ProtoMajor)
 
 			requestID := r.Header.Get("X-Request-ID")
 			if requestID == "" {
@@ -39,7 +39,7 @@ func RequestLoggerMiddleware(logger *slog.Logger) func(http.Handler) http.Handle
 			start := time.Now()
 
 			// Create a response writer wrapper to capture status and size
-			ww := chimiddleware.NewWrapResponseWriter(w, r.ProtoMajor)
+			ww := middleware.NewWrapResponseWriter(w, r.ProtoMajor)
 
 			requestID, ok := r.Context().Value(RequestIDContextKey{}).(string)
 			if !ok {
