@@ -7,7 +7,7 @@ import (
 	"github.com/go-chi/render"
 )
 
-type ErrorResponse struct {
+type ErrRepsonse struct {
 	Err            error `json:"-"` // low-level runtime error
 	HTTPStatusCode int   `json:"-"` // http response status code
 
@@ -16,8 +16,14 @@ type ErrorResponse struct {
 	Details    interface{} `json:"details,omitempty"`
 }
 
-func NewErrorResponse(err error, statusCode int, statusText string, errorText string, details interface{}) *ErrorResponse {
-	return &ErrorResponse{
+func NewErrorResponse(
+	err error,
+	statusCode int,
+	statusText string,
+	errorText string,
+	details interface{},
+) *ErrRepsonse {
+	return &ErrRepsonse{
 		Err:            err,
 		HTTPStatusCode: statusCode,
 		StatusText:     statusText,
@@ -26,23 +32,9 @@ func NewErrorResponse(err error, statusCode int, statusText string, errorText st
 	}
 }
 
-func (e *ErrorResponse) Error() string {
-	if e.Err != nil {
-		return e.Err.Error()
-	}
-	if e.ErrorText != "" {
-		return e.ErrorText
-	}
-	if e.StatusText != "" {
-		return e.StatusText
-	}
-
-	return ""
-}
-
-func (e *ErrorResponse) LogValue() slog.Value {
+func (e *ErrRepsonse) LogValue() slog.Value {
 	return slog.GroupValue(
-		slog.String("error", e.Error()),
+		slog.String("error", e.Err.Error()),
 		slog.Int("http_status_code", e.HTTPStatusCode),
 		slog.String("status_text", e.StatusText),
 		slog.String("error_text", e.ErrorText),
@@ -50,14 +42,14 @@ func (e *ErrorResponse) LogValue() slog.Value {
 	)
 }
 
-func (e *ErrorResponse) Render(_ http.ResponseWriter, r *http.Request) error {
+func (e *ErrRepsonse) Render(_ http.ResponseWriter, r *http.Request) error {
 	render.Status(r, e.HTTPStatusCode)
 
 	return nil
 }
 
-func RenderErrorResponse(err error) *ErrorResponse {
-	return &ErrorResponse{
+func RenderErrorResponse(err error) *ErrRepsonse {
+	return &ErrRepsonse{
 		Err:            err,
 		HTTPStatusCode: http.StatusUnprocessableEntity,
 		StatusText:     "Error rendering response.",

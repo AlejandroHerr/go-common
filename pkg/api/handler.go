@@ -7,7 +7,7 @@ import (
 	"github.com/go-chi/render"
 )
 
-type RendererFunc func(http.ResponseWriter, *http.Request) (render.Renderer, *ErrorResponse)
+type RendererFunc func(http.ResponseWriter, *http.Request) (render.Renderer, *ErrRepsonse)
 
 func HandleRendererFunc(fn RendererFunc, logger *slog.Logger) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
