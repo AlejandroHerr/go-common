@@ -7,9 +7,9 @@ import (
 
 var _ slog.Handler = (*DiscardHandler)(nil)
 
-// NewTestLogger returns a no-op logger that discards all output.
+// NewDiscardLogger returns a no-op logger that discards all output.
 // Perfect for unit tests where you don't want to see log output.
-func NewTestLogger() *slog.Logger {
+func NewDiscardLogger() *slog.Logger {
 	return slog.New(NewDiscardHandler())
 }
 
