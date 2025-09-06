@@ -1,37 +1,13 @@
 package api
 
 import (
-	"context"
 	"log/slog"
 	"net/http"
 	"time"
 
 	"github.com/go-chi/chi/v5"
-	"github.com/go-chi/chi/v5/middleware"
-	"github.com/google/uuid"
+	chimiddleware "github.com/go-chi/chi/v5/middleware"
 )
-
-type RequestIDContextKey struct{}
-
-func RequestIDMiddleware() func(http.Handler) http.Handler {
-	return func(next http.Handler) http.Handler {
-		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			ww := middleware.NewWrapResponseWriter(w, r.ProtoMajor)
-
-			requestID := r.Header.Get("X-Request-ID")
-			if requestID == "" {
-				requestID = uuid.New().String()
-			}
-
-			ww.Header().Set("X-Request-ID", requestID)
-
-			ctx := r.Context()
-			ctx = context.WithValue(ctx, RequestIDContextKey{}, requestID)
-
-			next.ServeHTTP(ww, r.WithContext(ctx))
-		})
-	}
-}
 
 func RequestLoggerMiddleware(logger *slog.Logger) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
@@ -39,9 +15,9 @@ func RequestLoggerMiddleware(logger *slog.Logger) func(http.Handler) http.Handle
 			start := time.Now()
 
 			// Create a response writer wrapper to capture status and size
-			ww := middleware.NewWrapResponseWriter(w, r.ProtoMajor)
+			ww := chimiddleware.NewWrapResponseWriter(w, r.ProtoMajor)
 
-			requestID, ok := r.Context().Value(RequestIDContextKey{}).(string)
+			requestID, ok := r.Context().Value(chimiddleware.RequestIDKey).(string)
 			if !ok {
 				requestID = "unknown"
 			}
