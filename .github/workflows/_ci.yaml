@@ -36,4 +36,11 @@ jobs:
         with:
           go-version: ${{ inputs.go-version }}
           cache: true
-      - uses: katexochen/go-tidy-check@v2
+      - name: Check if go.mod is tidy
+        run: |
+          go mod tidy -diff
+          if [ -n "$(go mod tidy -diff)" ]; then
+            echo "::error::go.mod or go.sum files are not tidy"
+            echo "Please run 'go mod tidy' and commit the changes"
+            exit 1
+          fi
